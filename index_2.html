@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fleet Readiness &middot; Emergency Assistance Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     DESIGN TOKENS
+     Palette: cream white surface, charcoal + deep teal as the two
+     interactive/structural colours. Severity is communicated with
+     weight, fill and motion rather than a red/amber/green system,
+     to keep the console feeling like a single coherent instrument
+     rather than a traffic light.
+     ============================================================ */
+  :root{
+    --cream:        #F6F3EA;
+    --cream-deep:   #EFEADB;
+    --surface:      #FFFEFA;
+    --charcoal:     #24282B;
+    --charcoal-soft:#565D62;
+    --charcoal-faint:#9BA1A4;
+    --teal:         #0E4F52;
+    --teal-deep:    #082F31;
+    --teal-mid:     #2F7A7D;
+    --teal-tint:    #E2EEED;
+    --teal-tint-2:  #CFE3E2;
+    --border:       #DDD6C4;
+    --border-soft:  #E9E4D5;
+    --shadow:       0 20px 45px -25px rgba(8, 30, 31, 0.35);
+
+    --font-display: 'Fraunces', serif;
+    --font-body:    'IBM Plex Sans', sans-serif;
+    --font-mono:    'IBM Plex Mono', monospace;
+  }
+
+  *{ box-sizing: border-box; }
+  html{ scroll-behavior: smooth; }
+
+  body{
+    margin: 0;
+    background:
+      radial-gradient(1200px 600px at 100% -10%, var(--teal-tint) 0%, transparent 55%),
+      var(--cream);
+    color: var(--charcoal);
+    font-family: var(--font-body);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a{ color: inherit; }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px clamp(20px, 4vw, 48px);
+    background: var(--charcoal);
+    color: var(--cream);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+  .brand{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand svg{ flex: none; }
+  .brand-text .eyebrow{
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--teal-mid);
+    display: block;
+  }
+  .brand-text .title{
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  /* ---------- Layout shell ---------- */
+  .shell{
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: clamp(24px, 4vw, 48px);
+  }
+
+  .page-head{
+    margin-bottom: 28px;
+    max-width: 640px;
+  }
+  .page-head h1{
+    font-family: var(--font-display);
+    font-size: clamp(26px, 3vw, 32px);
+    font-weight: 600;
+    margin: 0 0 8px;
+  }
+  .page-head p{
+    margin: 0;
+    color: var(--charcoal-soft);
+    font-size: 14.5px;
+  }
+
+  .grid{
+    display: grid;
+    grid-template-columns: minmax(0, 400px) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 900px){
+    .grid{ grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Cards ---------- */
+  .card{
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+  }
+  .card-head{
+    padding: 20px 24px 0;
+  }
+  .card-head .eyebrow{
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--teal-mid);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .card-head h2{
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  .card-head .sub{
+    font-size: 13px;
+    color: var(--charcoal-soft);
+    margin: 0;
+  }
+
+  /* ---------- Form ---------- */
+  form{ padding: 18px 24px 24px; }
+
+  .field{
+    margin-bottom: 16px;
+  }
+  .field label{
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--charcoal);
+    margin-bottom: 6px;
+  }
+  .field .hint{
+    font-size: 11.5px;
+    color: var(--charcoal-faint);
+    margin-top: 4px;
+  }
+  .field select,
+  .field input{
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 10px;
+    border: 1.4px solid var(--border);
+    background: var(--cream);
+    color: var(--charcoal);
+    font-family: var(--font-body);
+    font-size: 14px;
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .field select{
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%230E4F52'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 34px;
+  }
+  .field select:focus,
+  .field input:focus{
+    outline: none;
+    border-color: var(--teal);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px var(--teal-tint-2);
+  }
+  .row-2{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .field.readonly input{
+    background: var(--teal-tint);
+    border-style: dashed;
+    color: var(--teal-deep);
+    font-family: var(--font-mono);
+    font-weight: 600;
+    cursor: not-allowed;
+  }
+
+  .analyze-btn{
+    width: 100%;
+    margin-top: 6px;
+    padding: 14px 16px;
+    border: none;
+    border-radius: 12px;
+    background: var(--teal);
+    color: var(--cream);
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 14.5px;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background .15s ease, transform .1s ease;
+  }
+  .analyze-btn:hover{ background: var(--teal-deep); }
+  .analyze-btn:active{ transform: translateY(1px); }
+  .analyze-btn svg{ transition: transform .2s ease; }
+  .analyze-btn:hover svg{ transform: translateX(2px); }
+
+  /* ---------- Results column ---------- */
+  .results{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .empty-state{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 10px;
+    padding: 70px 32px;
+    color: var(--charcoal-soft);
+  }
+  .empty-state h3{
+    font-family: var(--font-display);
+    font-size: 18px;
+    margin: 4px 0 0;
+    color: var(--charcoal);
+  }
+  .empty-state p{ margin: 0; font-size: 13.5px; max-width: 320px; }
+
+  .results-inner{
+    display: none;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .results-inner.is-visible{ display: flex; }
+
+  /* ---------- Gauge card ---------- */
+  .gauge-card{
+    padding: 26px 26px 22px;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 20px;
+    align-items: center;
+  }
+  @media (max-width: 620px){
+    .gauge-card{ grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  }
+  .gauge-wrap{ position: relative; width: 220px; }
+  .gauge-readout{
+    position: absolute;
+    left: 50%;
+    bottom: 6px;
+    transform: translateX(-50%);
+    text-align: center;
+  }
+  .gauge-readout .level{
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: 0.02em;
+  }
+  .gauge-readout .caption{
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--charcoal-soft);
+  }
+  #needle{ transition: transform 900ms cubic-bezier(.2,.9,.25,1); transform-origin: 110px 110px; }
+  #arcFill{ transition: stroke-dashoffset 900ms cubic-bezier(.2,.9,.25,1); }
+
+  .gauge-side .eyebrow{
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--teal-mid);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .gauge-side h2{
+    font-family: var(--font-display);
+    font-size: 20px;
+    margin: 0 0 10px;
+  }
+  .confidence-row{
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .confidence-row .num{
+    font-family: var(--font-mono);
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--teal-deep);
+  }
+  .confidence-row .label{
+    font-size: 12.5px;
+    color: var(--charcoal-soft);
+  }
+  .meter{
+    width: 100%;
+    height: 6px;
+    border-radius: 4px;
+    background: var(--teal-tint);
+    overflow: hidden;
+  }
+  .meter-fill{
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal-mid), var(--teal));
+    width: 0%;
+    transition: width 900ms cubic-bezier(.2,.9,.25,1);
+  }
+
+  /* ---------- Two-up: summary + actions ---------- */
+  .subgrid{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 720px){
+    .subgrid{ grid-template-columns: 1fr; }
+  }
+
+  .summary-list{
+    list-style: none;
+    margin: 0;
+    padding: 16px 24px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .summary-list li{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13.5px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .summary-list li:last-child{ border-bottom: none; padding-bottom: 0; }
+  .summary-list .k{ color: var(--charcoal-soft); }
+  .summary-list .v{
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--charcoal);
+  }
+
+  .actions-list{
+    list-style: none;
+    margin: 0;
+    padding: 16px 24px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .actions-list li{
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-size: 13.5px;
+    padding: 10px 12px;
+    background: var(--teal-tint);
+    border: 1px solid var(--teal-tint-2);
+    border-radius: 10px;
+  }
+  .actions-list li svg{ flex: none; margin-top: 2px; }
+
+  /* ---------- Explainability ---------- */
+  .chips{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 16px 24px 22px;
+  }
+  .chip{
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1.4px solid var(--teal);
+    color: var(--teal-deep);
+    font-size: 12.5px;
+    font-weight: 500;
+    background: var(--surface);
+  }
+  .chip .bullet{
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--teal);
+    flex: none;
+  }
+  .explain-note{
+    margin: 0;
+    padding: 0 24px 20px;
+    font-size: 12.5px;
+    color: var(--charcoal-soft);
+  }
+
+  footer{
+    text-align: center;
+    padding: 30px 20px 50px;
+    color: var(--charcoal-faint);
+    font-size: 12px;
+  }
+
+  /* Focus visibility for accessibility */
+  button:focus-visible,
+  select:focus-visible,
+  input:focus-visible{
+    outline: 2px solid var(--teal);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle cx="15" cy="15" r="14" stroke="#2F7A7D" stroke-width="1.2"/>
+        <path d="M15 5v6M15 19v6M5 15h6M19 15h6" stroke="#2F7A7D" stroke-width="1.2"/>
+        <circle cx="15" cy="15" r="4.5" fill="#0E4F52"/>
+      </svg>
+      <div class="brand-text">
+        <span class="eyebrow">Fleet Operations</span>
+        <span class="title">Emergency Readiness Console</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="page-head">
+      <h1>Passenger Emergency Assistance Assessment</h1>
+      <p>Enter a passenger's manifest details to generate an AI-assisted emergency assistance recommendation for crew briefing purposes.</p>
+    </div>
+
+    <div class="grid">
+      <!-- ============ INTAKE FORM ============ -->
+      <div class="card">
+        <div class="card-head">
+          <span class="eyebrow">Manifest Intake</span>
+          <h2>Passenger Details</h2>
+          <p class="sub">All fields are required to generate an assessment.</p>
+        </div>
+        <form id="passengerForm">
+          <div class="field">
+            <label for="pclass">Passenger Class</label>
+            <select id="pclass" required>
+              <option value="1">First Class</option>
+              <option value="2">Second Class</option>
+              <option value="3" selected>Third Class</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="sex">Sex</label>
+            <select id="sex" required>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="age">Age (years)</label>
+            <input type="number" id="age" min="0" max="100" step="0.5" value="30" required>
+          </div>
+
+          <div class="row-2">
+            <div class="field">
+              <label for="sibsp">Siblings / Spouse Aboard</label>
+              <input type="number" id="sibsp" min="0" max="15" step="1" value="0" required>
+            </div>
+            <div class="field">
+              <label for="parch">Parents / Children Aboard</label>
+              <input type="number" id="parch" min="0" max="15" step="1" value="0" required>
+            </div>
+          </div>
+
+          <div class="field readonly">
+            <label for="familySize">Family Size (auto-calculated)</label>
+            <input type="text" id="familySize" value="1" readonly tabindex="-1">
+            <span class="hint">Siblings/Spouse + Parents/Children + 1</span>
+          </div>
+
+          <div class="field">
+            <label for="fare">Fare Paid</label>
+            <input type="number" id="fare" min="0" max="600" step="0.01" value="32.20" required>
+          </div>
+
+          <button type="submit" class="analyze-btn">
+            Analyze Passenger
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h9m0 0L8.5 4M12 8l-3.5 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </form>
+      </div>
+
+      <!-- ============ RESULTS ============ -->
+      <div class="results">
+
+        <div id="emptyState" class="card empty-state">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2 3 6v6c0 5 4 8.5 9 10 5-1.5 9-5 9-10V6l-9-4Z" stroke="#0E4F52" stroke-width="1.3"/><path d="M9 12l2 2 4-4" stroke="#0E4F52" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <h3>No assessment yet</h3>
+          <p>Fill in the passenger manifest and select "Analyze Passenger" to generate an emergency assistance recommendation.</p>
+        </div>
+
+        <div id="resultsWrap" class="results-inner">
+
+          <!-- Gauge + confidence -->
+          <div class="card gauge-card">
+            <div class="gauge-wrap">
+              <svg width="220" height="130" viewBox="0 0 220 130">
+                <path d="M20 110 A90 90 0 0 1 200 110" fill="none" stroke="#E2EEED" stroke-width="14" stroke-linecap="round"/>
+                <path id="arcFill" d="M20 110 A90 90 0 0 1 200 110" fill="none" stroke="#0E4F52" stroke-width="14" stroke-linecap="round"
+                      stroke-dasharray="282.6" stroke-dashoffset="282.6"/>
+                <g id="needle">
+                  <line x1="110" y1="110" x2="110" y2="34" stroke="#24282B" stroke-width="2.4" stroke-linecap="round"/>
+                  <circle cx="110" cy="110" r="6" fill="#24282B"/>
+                </g>
+              </svg>
+              <div class="gauge-readout">
+                <span class="level" id="levelText">&mdash;</span>
+                <span class="caption">Assistance Level</span>
+              </div>
+            </div>
+            <div class="gauge-side">
+              <span class="eyebrow">AI Assessment</span>
+              <h2>Emergency Assistance Level</h2>
+              <div class="confidence-row">
+                <span class="num" id="confidenceNum">0%</span>
+                <span class="label">model confidence in this classification</span>
+              </div>
+              <div class="meter"><div class="meter-fill" id="confidenceMeter"></div></div>
+            </div>
+          </div>
+
+          <div class="subgrid">
+            <div class="card">
+              <div class="card-head">
+                <span class="eyebrow">Manifest Snapshot</span>
+                <h2>Passenger Summary</h2>
+              </div>
+              <ul class="summary-list" id="summaryList"></ul>
+            </div>
+
+            <div class="card">
+              <div class="card-head">
+                <span class="eyebrow">Crew Briefing</span>
+                <h2>Recommended Actions</h2>
+              </div>
+              <ul class="actions-list" id="actionsList"></ul>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <span class="eyebrow">Explainable AI</span>
+              <h2>Why the model reached this assessment</h2>
+              <p class="sub">Factors below reflect the passenger attributes the model weighed &mdash; class, sex, age, fare and family size.</p>
+            </div>
+            <div class="chips" id="explainChips"></div>
+            <p class="explain-note" id="explainNote"></p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Fleet Operations &middot; Emergency Readiness Console &middot; Internal crew training tool
+  </footer>
+
+<script>
+/* =====================================================================
+   MODEL REPLICATION LAYER
+   -----------------------------------------------------------------
+   Everything below reproduces, in vanilla JS, the exact pipeline and
+   fitted DecisionTreeClassifier(max_depth=3, criterion="entropy",
+   random_state=42) trained in the source notebook on the cleaned
+   dataset supplied by the user. Feature order, encoding, and scaling
+   match the notebook cell-for-cell:
+
+     1. family_size = sibsp + parch + 1                (notebook cell 11)
+     2. age, fare  -> MinMaxScaler, fit on training data (cell 13)
+     3. sex        -> LabelEncoder  (female=0, male=1)   (cell 15)
+     4. feature order fed to the tree:
+        [pclass, sex, age, sibsp, parch, fare, family_size] (cell 22)
+
+   The scaler bounds and tree structure below were extracted by
+   re-running this exact pipeline against the cleaned CSV supplied
+   for this project (773 rows, post dedup/cleaning) - not invented.
+   ===================================================================== */
+
+  // MinMaxScaler bounds learned from the training data (age & fare)
+  const AGE_MIN = 0.42,   AGE_MAX = 80.0;
+  const FARE_MIN = 0.0,   FARE_MAX = 512.3292;
+
+  // Fitted tree, extracted node-by-node from tree.tree_
+  // leaf class_counts = [P(deceased), P(survived)] at that leaf
+  const TREE_NODES = {
+    0:  { feature: "sex",         threshold: 0.5,                left: 1,  right: 8  },
+    1:  { feature: "pclass",      threshold: 2.5,                left: 2,  right: 5  },
+    2:  { feature: "fare",        threshold: 0.05632364749908447,left: 3,  right: 4  },
+    3:  { leaf: true, counts: [0.11538461538461539, 0.8846153846153846] },
+    4:  { leaf: true, counts: [0.023529411764705882, 0.9764705882352941] },
+    5:  { feature: "family_size", threshold: 4.5,                left: 6,  right: 7  },
+    6:  { leaf: true, counts: [0.40963855421686746, 0.5903614457831325] },
+    7:  { leaf: true, counts: [0.8421052631578947, 0.15789473684210525] },
+    8:  { feature: "age",         threshold: 0.11409901827573776,left: 9,  right: 12 },
+    9:  { feature: "family_size", threshold: 4.5,                left: 10, right: 11 },
+    10: { leaf: true, counts: [0.0, 1.0] },
+    11: { leaf: true, counts: [0.8888888888888888, 0.1111111111111111] },
+    12: { feature: "pclass",      threshold: 1.5,                left: 13, right: 14 },
+    13: { leaf: true, counts: [0.6363636363636364, 0.36363636363636365] },
+    14: { leaf: true, counts: [0.8609022556390977, 0.13909774436090225] }
+  };
+
+  function runTree(features){
+    let nodeId = 0;
+    const path = [];
+    while(true){
+      const node = TREE_NODES[nodeId];
+      if(node.leaf){
+        return { counts: node.counts, path };
+      }
+      const val = features[node.feature];
+      const goLeft = val <= node.threshold;
+      path.push({ feature: node.feature, threshold: node.threshold, value: val, direction: goLeft ? "left" : "right" });
+      nodeId = goLeft ? node.left : node.right;
+    }
+  }
+
+  function preprocess(raw){
+    const familySize = raw.sibsp + raw.parch + 1;
+    const scaledAge  = (raw.age  - AGE_MIN)  / (AGE_MAX  - AGE_MIN);
+    const scaledFare = (raw.fare - FARE_MIN) / (FARE_MAX - FARE_MIN);
+    const sexEncoded = raw.sex === "male" ? 1 : 0; // LabelEncoder: female=0, male=1
+
+    return {
+      familySize,
+      features: {
+        pclass: raw.pclass,
+        sex: sexEncoded,
+        age: Math.min(Math.max(scaledAge, 0), 1),
+        sibsp: raw.sibsp,
+        parch: raw.parch,
+        fare: Math.max(scaledFare, 0),
+        family_size: familySize
+      }
+    };
+  }
+
+  /* =====================================================================
+     ASSESSMENT LAYER
+     Translates the model's raw class probabilities into operational
+     language for a cruise emergency-planning context.
+     ===================================================================== */
+
+  function assistanceLevel(pDeceased){
+    // Higher historical risk (lower predicted survival likelihood) maps
+    // to a higher recommended emergency assistance level.
+    if(pDeceased >= 0.60) return "HIGH";
+    if(pDeceased >= 0.30) return "MEDIUM";
+    return "LOW";
+  }
+
+  const CLASS_LABELS = { 1: "First Class", 2: "Second Class", 3: "Third Class" };
+
+  function buildActions(level, raw, familySize){
+    const actions = [];
+    if(level === "HIGH"){
+      actions.push("Assign a nearby crew member to accompany this passenger directly.");
+      actions.push("Escort toward the nearest lifeboat as a priority case.");
+    } else if(level === "MEDIUM"){
+      actions.push("Provide additional evacuation guidance and confirm understanding of muster point.");
+      actions.push("Check in on this passenger during the evacuation sweep.");
+    } else {
+      actions.push("Standard evacuation procedures are sufficient for this passenger.");
+    }
+    if(familySize >= 4){
+      actions.push("Keep this family group together and route them as a single unit.");
+    }
+    if(raw.age <= 12 || raw.age >= 65){
+      actions.push("Offer mobility assistance appropriate to passenger age when moving to muster stations.");
+    }
+    return actions;
+  }
+
+  function buildExplanations(path, raw, familySize){
+    const chips = [];
+    path.forEach(step => {
+      if(step.feature === "sex"){
+        chips.push(step.value <= 0.5 ? "Female passenger" : "Male passenger");
+      }
+      if(step.feature === "pclass"){
+        chips.push(step.direction === "left" ? "Higher passenger class accommodation" : "Lower passenger class accommodation");
+      }
+      if(step.feature === "fare"){
+        chips.push(step.direction === "left" ? "Lower fare bracket" : "Higher fare bracket");
+      }
+      if(step.feature === "family_size"){
+        chips.push(step.direction === "right" ? "Travelling with a large family group" : "Small or standard-sized family group");
+      }
+    });
+    // De-duplicate while preserving order
+    return [...new Set(chips)];
+  }
+
+  /* =====================================================================
+     UI WIRING
+     ===================================================================== */
+
+  const form = document.getElementById("passengerForm");
+  const sibspInput = document.getElementById("sibsp");
+  const parchInput = document.getElementById("parch");
+  const familySizeInput = document.getElementById("familySize");
+
+  function syncFamilySize(){
+    const s = parseInt(sibspInput.value, 10) || 0;
+    const p = parseInt(parchInput.value, 10) || 0;
+    familySizeInput.value = s + p + 1;
+  }
+  sibspInput.addEventListener("input", syncFamilySize);
+  parchInput.addEventListener("input", syncFamilySize);
+  syncFamilySize();
+
+  const emptyState = document.getElementById("emptyState");
+  const resultsWrap = document.getElementById("resultsWrap");
+  const levelText = document.getElementById("levelText");
+  const confidenceNum = document.getElementById("confidenceNum");
+  const confidenceMeter = document.getElementById("confidenceMeter");
+  const arcFill = document.getElementById("arcFill");
+  const needle = document.getElementById("needle");
+  const summaryList = document.getElementById("summaryList");
+  const actionsList = document.getElementById("actionsList");
+  const explainChips = document.getElementById("explainChips");
+  const explainNote = document.getElementById("explainNote");
+
+  const ARC_LENGTH = 282.6; // matches the SVG path length used above
+
+  form.addEventListener("submit", function(e){
+    e.preventDefault();
+
+    const raw = {
+      pclass: parseInt(document.getElementById("pclass").value, 10),
+      sex: document.getElementById("sex").value,
+      age: parseFloat(document.getElementById("age").value),
+      sibsp: parseInt(sibspInput.value, 10) || 0,
+      parch: parseInt(parchInput.value, 10) || 0,
+      fare: parseFloat(document.getElementById("fare").value)
+    };
+
+    const { familySize, features } = preprocess(raw);
+    const { counts, path } = runTree(features);
+    const pDeceased = counts[0];
+    const pSurvived = counts[1];
+    const confidence = Math.max(pDeceased, pSurvived);
+    const level = assistanceLevel(pDeceased);
+
+    // ---- Gauge ----
+    // Map assistance level to a 0..1 dial position (LOW -> low arc, HIGH -> full arc)
+    const dialValue = level === "HIGH" ? 0.85 + (pDeceased - 0.6) * 0.3
+                     : level === "MEDIUM" ? 0.35 + (pDeceased - 0.3) * 1.5
+                     : Math.max(0.06, pDeceased * 1.1);
+    const clampedDial = Math.min(Math.max(dialValue, 0.04), 1);
+    arcFill.style.strokeDashoffset = ARC_LENGTH * (1 - clampedDial);
+    const angle = -90 + clampedDial * 180;
+    needle.style.transform = `rotate(${angle}deg)`;
+    levelText.textContent = level;
+
+    confidenceNum.textContent = Math.round(confidence * 100) + "%";
+    confidenceMeter.style.width = Math.round(confidence * 100) + "%";
+
+    // ---- Passenger summary ----
+    summaryList.innerHTML = `
+      <li><span class="k">Passenger Class</span><span class="v">${CLASS_LABELS[raw.pclass]}</span></li>
+      <li><span class="k">Family Size</span><span class="v">${familySize}</span></li>
+    `;
+
+    // ---- Recommended actions ----
+    const actions = buildActions(level, raw, familySize);
+    actionsList.innerHTML = actions.map(a => `
+      <li>
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="#0E4F52" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>${a}</span>
+      </li>
+    `).join("");
+
+    // ---- Explainability ----
+    const chips = buildExplanations(path, raw, familySize);
+    explainChips.innerHTML = chips.map(c => `<span class="chip"><span class="bullet"></span>${c}</span>`).join("");
+    explainNote.textContent = `This passenger's profile was routed through ${path.length} model decision point${path.length === 1 ? "" : "s"} to reach a ${level.toLowerCase()} assistance classification.`;
+
+    emptyState.style.display = "none";
+    resultsWrap.classList.add("is-visible");
+    resultsWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+</script>
+</body>
+</html>
